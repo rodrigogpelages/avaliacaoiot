@@ -79,15 +79,28 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- MODAL DE MENSAGENS GENÉRICAS (Avisos de Bloqueio/Espera) -->
-    <div id="generic-modal" class="fixed inset-0 bg-gray-900/60 z-[200] hidden flex-col items-center justify-center p-4 backdrop-blur-sm slide-fade">
-        <div class="glass-card p-8 md:p-10 rounded-2xl w-full max-w-md text-center transform transition-all scale-100">
+    <!-- MODAL GENÉRICO DE AVISOS DOM (Substitui alerts e trava de status) -->
+    <div id="generic-modal" class="fixed inset-0 bg-gray-900/80 z-[300] hidden flex-col items-center justify-center p-4 backdrop-blur-md slide-fade">
+        <div class="glass-card p-8 md:p-10 rounded-[2rem] shadow-2xl w-full max-w-md text-center transform transition-all scale-100 relative overflow-hidden">
             <div id="generic-modal-icon" class="text-5xl md:text-6xl mb-4 md:mb-6">🔒</div>
             <h2 id="generic-modal-title" class="text-2xl md:text-3xl font-black text-gray-900 mb-4">Acesso Restrito</h2>
-            <p id="generic-modal-message" class="text-gray-600 font-medium mb-8 text-base md:text-lg">A avaliação ainda não está disponível. Aguarde o professor liberar.</p>
-            <button onclick="location.reload()" class="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 md:py-4 rounded-xl shadow-lg transition-transform hover:-translate-y-1">
-                Entendido, Voltar
+            <p id="generic-modal-message" class="text-gray-600 font-medium mb-8 text-base md:text-lg leading-relaxed">A avaliação ainda não está disponível. Aguarde o professor liberar.</p>
+            <button id="btn-generic-modal-ok" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-[0_10px_20px_-10px_rgba(37,99,235,0.5)] transition-transform transform hover:-translate-y-1">
+                Entendido
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE OVERLAY PARA PROCESSAMENTO EM LOTE IA -->
+    <div id="batch-processing-modal" class="fixed inset-0 bg-gray-900/95 z-[350] hidden flex-col items-center justify-center p-6 backdrop-blur-xl transition-all">
+        <div class="text-center max-w-2xl w-full">
+            <div class="text-6xl md:text-7xl mb-6 animate-pulse drop-shadow-lg">✨</div>
+            <h2 id="batch-processing-title" class="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">Iniciando a análise das provas...</h2>
+            <p id="batch-processing-status" class="text-blue-300 font-bold text-lg md:text-xl mb-8">Avaliando...</p>
+            <div class="w-full h-4 bg-gray-800 rounded-full overflow-hidden shadow-inner border border-gray-700">
+                <div id="batch-progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+            <p class="text-gray-500 text-sm mt-6 font-medium">Por favor, não feche nem atualize esta página.</p>
         </div>
     </div>
 
@@ -204,33 +217,38 @@
 
     <!-- TELA 3: PAINEL DO PROFESSOR -->
     <div id="professor-screen" class="fixed inset-0 bg-gray-50 z-[65] hidden flex-col items-center p-4 overflow-y-auto">
-        <div class="w-full max-w-6xl mt-2 md:mt-4 mb-4 md:mb-6 flex justify-between items-center px-2">
+        <div class="w-full max-w-[90rem] mt-2 md:mt-4 mb-4 md:mb-6 flex justify-between items-center px-2">
             <h1 class="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Dashboard Admin</h1>
             <button id="btn-prof-sair" class="text-xs md:text-sm bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2">
                 <span>🚪</span> Sair
             </button>
         </div>
 
-        <div class="bg-white p-6 md:p-8 rounded-2xl md:rounded-[2rem] shadow-xl w-full max-w-6xl border border-gray-100">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
-                <div class="bg-gray-50 rounded-2xl p-4 md:p-6 border border-gray-200 flex flex-col justify-center">
-                    <p class="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mb-1 md:mb-2">Status do Sistema</p>
+        <div class="bg-white p-6 md:p-8 rounded-2xl md:rounded-[2rem] shadow-xl w-full max-w-[90rem] border border-gray-100">
+            <!-- Controle de Status Moderno -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-8 md:mb-12">
+                <div class="bg-gray-50 rounded-2xl p-4 md:p-6 border border-gray-200 flex flex-col justify-center shadow-inner lg:col-span-1">
+                    <p class="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mb-1 md:mb-2">Status da Avaliação</p>
                     <div class="flex items-center gap-2 md:gap-3">
                         <div id="status-indicator" class="w-3 h-3 md:w-4 md:h-4 rounded-full bg-gray-400 animate-pulse"></div>
                         <p id="prof-status-display" class="text-xl md:text-2xl font-black text-gray-800 tracking-tight">---</p>
                     </div>
                 </div>
-                <button id="btn-prof-abrir" class="bg-white border-2 border-green-500 hover:bg-green-50 text-green-700 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-1 md:gap-2 transition group">
+                <button id="btn-prof-abrir" class="bg-white border-2 border-green-500 hover:bg-green-50 text-green-700 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-1 md:gap-2 transition group lg:col-span-1 shadow-sm hover:shadow-md">
                     <span class="text-2xl md:text-3xl group-hover:scale-110 transition">🟢</span>
                     <span class="font-black text-xs md:text-sm uppercase tracking-wider text-center">Abrir Prova</span>
                 </button>
-                <button id="btn-prof-fechar" class="bg-white border-2 border-red-500 hover:bg-red-50 text-red-700 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-1 md:gap-2 transition group">
+                <button id="btn-prof-fechar" class="bg-white border-2 border-red-500 hover:bg-red-50 text-red-700 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-1 md:gap-2 transition group lg:col-span-1 shadow-sm hover:shadow-md">
                     <span class="text-2xl md:text-3xl group-hover:scale-110 transition">🔴</span>
                     <span class="font-black text-xs md:text-sm uppercase tracking-wider text-center">Fechar Prova</span>
                 </button>
-                <button id="btn-prof-resultados" class="bg-white border-2 border-blue-500 hover:bg-blue-50 text-blue-700 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-1 md:gap-2 transition group">
+                <button id="btn-prof-notas" class="bg-white border-2 border-yellow-500 hover:bg-yellow-50 text-yellow-700 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-1 md:gap-2 transition group lg:col-span-1 shadow-sm hover:shadow-md">
+                    <span class="text-2xl md:text-3xl group-hover:scale-110 transition">🟡</span>
+                    <span class="font-black text-xs md:text-sm uppercase tracking-wider text-center">Somente Notas</span>
+                </button>
+                <button id="btn-prof-resultados" class="bg-white border-2 border-blue-500 hover:bg-blue-50 text-blue-700 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-1 md:gap-2 transition group lg:col-span-1 shadow-sm hover:shadow-md">
                     <span class="text-2xl md:text-3xl group-hover:scale-110 transition">📊</span>
-                    <span class="font-black text-xs md:text-sm uppercase tracking-wider text-center">Liberar Gabarito</span>
+                    <span class="font-black text-xs md:text-sm uppercase tracking-wider text-center">Gabarito+Notas</span>
                 </button>
             </div>
 
@@ -238,12 +256,17 @@
                 <h2 class="text-xl md:text-2xl font-black text-gray-800 flex items-center gap-2 md:gap-3">
                     <span class="text-blue-600">📋</span> Avaliações Entregues
                 </h2>
-                <button id="btn-prof-atualizar" class="text-xs md:text-sm bg-gray-900 hover:bg-black text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow transition flex items-center gap-2">
-                    <span>🔄</span> Atualizar Lista
-                </button>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <button id="btn-prof-atualizar" class="flex-1 sm:flex-none text-xs md:text-sm bg-gray-900 hover:bg-black text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow transition flex items-center justify-center gap-2">
+                        <span>🔄</span> Atualizar Lista
+                    </button>
+                    <button id="btn-prof-lote-ia" class="flex-1 sm:flex-none text-xs md:text-sm bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow transition flex items-center justify-center gap-2">
+                        <span>✨</span> Corrigir Lote IA
+                    </button>
+                </div>
             </div>
 
-            <div id="lista-alunos-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 max-h-[60vh] overflow-y-auto pr-2">
+            <div id="lista-alunos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 max-h-[60vh] overflow-y-auto pr-2">
                 <div class="col-span-full flex flex-col items-center justify-center py-10 md:py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
                     <span class="text-3xl md:text-4xl mb-2 md:mb-3 animate-spin">⏳</span>
                     <p class="text-gray-500 text-sm md:text-base font-bold">Buscando banco de dados...</p>
@@ -268,19 +291,19 @@
     </div>
 
     <!-- TELA 4: CORREÇÃO / VISUALIZAÇÃO -->
-    <div id="review-screen" class="fixed inset-0 bg-gray-100 z-[80] hidden flex-col items-center p-4 overflow-y-auto">
-        <div class="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-center mb-4 md:mb-6 sticky top-0 bg-gray-100/95 backdrop-blur pb-3 pt-2 z-20 gap-3">
+    <div id="review-screen" class="fixed inset-0 bg-gray-100 z-[80] hidden flex-col items-center p-4 md:p-8 overflow-y-auto">
+        <div class="w-full max-w-5xl flex flex-col sm:flex-row justify-between items-center mb-4 md:mb-6 sticky top-0 bg-gray-100/95 backdrop-blur pb-3 pt-2 z-20 gap-3">
             <button id="btn-fechar-review" class="w-full sm:w-auto bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-800 px-5 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center justify-center gap-2 text-sm md:text-base">
                 <span>&larr;</span> Voltar ao Painel
             </button>
             <div class="w-full sm:w-auto bg-gray-900 text-white px-6 py-2.5 rounded-2xl font-black text-lg md:text-xl shadow-xl flex justify-center items-center gap-2 md:gap-3">
                 <span class="text-gray-400 text-xs md:text-sm tracking-widest uppercase">Nota Final</span>
                 <span id="review-nota-total" class="text-green-400 text-2xl md:text-3xl">0.00</span> 
-                <span class="text-xs md:text-sm text-gray-500">/ 14.00</span>
+                <span class="text-xs md:text-sm text-gray-500">/ 16.00</span>
             </div>
         </div>
         
-        <div class="bg-white p-6 md:p-10 rounded-2xl md:rounded-[2rem] shadow-xl w-full max-w-4xl border border-gray-100 mb-8">
+        <div class="bg-white p-6 md:p-10 rounded-2xl md:rounded-[2rem] shadow-xl w-full max-w-5xl border border-gray-100 mb-8">
             <div class="border-b-2 border-gray-100 pb-6 mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3">
                 <div>
                     <h1 class="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Espelho da Avaliação</h1>
@@ -308,12 +331,18 @@
                     <input type="number" id="input-nota-disc" step="0.1" min="0" max="3" class="custom-input border-2 border-yellow-300 p-3 md:p-4 rounded-xl w-24 md:w-32 text-center font-black text-2xl md:text-3xl text-blue-700 bg-white">
                 </div>
                 
-                <label class="font-bold block mb-2 md:mb-3 text-gray-800 text-sm md:text-base">Feedback Pedagógico (Opcional):</label>
-                <textarea id="input-feedback-prof" rows="4" class="custom-input w-full border-2 border-yellow-200 p-4 md:p-5 rounded-2xl mb-5 md:mb-6 font-medium bg-white text-gray-700 resize-y leading-relaxed text-justify text-sm md:text-base" placeholder="Escreva observações construtivas sobre o raciocínio do aluno..."></textarea>
+                <label class="font-bold block mb-2 md:mb-3 text-gray-800 text-sm md:text-base">Feedback Pedagógico (Opcional ou IA):</label>
+                <textarea id="input-feedback-prof" rows="6" class="custom-input w-full border-2 border-yellow-200 p-4 md:p-5 rounded-2xl mb-5 md:mb-6 font-medium bg-white text-gray-700 resize-y leading-relaxed text-justify text-sm md:text-base whitespace-pre-wrap" placeholder="Escreva observações construtivas ou gere uma sugestão com a IA..."></textarea>
                 
-                <button id="btn-salvar-correcao" class="w-full sm:w-auto sm:px-10 bg-gray-900 hover:bg-black text-white font-black py-3.5 md:py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex justify-center items-center gap-2 text-sm md:text-base">
-                    <span>💾</span> Salvar Nota e Atualizar
-                </button>
+                <div class="flex flex-col md:flex-row justify-between gap-4">
+                    <button id="btn-sugerir-ia" class="w-full md:w-auto md:px-8 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-black py-3.5 md:py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex justify-center items-center gap-2 text-sm md:text-base">
+                        <span>✨</span> Sugerir Correção com IA
+                    </button>
+                    
+                    <button id="btn-salvar-correcao" class="w-full md:w-auto md:px-10 bg-gray-900 hover:bg-black text-white font-black py-3.5 md:py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 flex justify-center items-center gap-2 text-sm md:text-base">
+                        <span>💾</span> Salvar Nota e Atualizar
+                    </button>
+                </div>
             </div>
             
             <!-- Área de feedback do Aluno -->
@@ -324,14 +353,14 @@
                     <span>👨‍🏫</span> Feedback do Professor
                 </h3>
                 
-                <div class="flex flex-col sm:flex-row gap-4 md:gap-6 mb-6">
-                    <div class="bg-white p-4 md:p-6 rounded-2xl border border-blue-100 shadow-sm text-center min-w-[150px] md:min-w-[180px]">
+                <div class="flex flex-col sm:flex-row gap-4 md:gap-6 mb-6 relative z-10">
+                    <div class="bg-white p-4 md:p-6 rounded-2xl border border-blue-100 shadow-sm text-center min-w-[150px] md:min-w-[180px] h-fit">
                         <p class="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-1 md:mb-2">Questão Discursiva</p>
                         <p class="text-3xl md:text-4xl font-black text-green-600"><span id="view-nota-disc"></span><span class="text-lg md:text-xl text-gray-400 ml-1">/3.0</span></p>
                     </div>
                     <div class="bg-white p-4 md:p-6 rounded-2xl border border-blue-100 shadow-sm flex-1">
-                        <p class="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 md:mb-3">Comentários</p>
-                        <p id="view-feedback-texto" class="text-sm md:text-base font-medium text-gray-800 italic leading-relaxed text-justify"></p>
+                        <p class="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mb-2 md:mb-3">Comentários e Análise</p>
+                        <div id="view-feedback-texto" class="text-sm md:text-base font-medium text-gray-800 leading-relaxed text-justify whitespace-pre-wrap"></div>
                     </div>
                 </div>
             </div>
@@ -452,11 +481,11 @@
             
             <div class="bg-gradient-to-b from-blue-600 to-blue-800 border border-blue-500 p-6 md:p-8 rounded-3xl mb-6 md:mb-8 shadow-inner relative z-10 text-white">
                 <p class="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-2 md:mb-3">Nota Alcançada</p>
-                <p class="text-5xl md:text-6xl font-black tracking-tighter"><span id="res-nota-total">0.00</span><span class="text-xl md:text-2xl opacity-50 ml-1 font-bold tracking-normal">/ 14.0</span></p>
+                <p class="text-5xl md:text-6xl font-black tracking-tighter"><span id="res-nota-total">0.00</span><span class="text-xl md:text-2xl opacity-50 ml-1 font-bold tracking-normal">/ 16.0</span></p>
             </div>
             
             <button id="btn-ver-prova-corrigida" class="w-full bg-gray-900 hover:bg-black text-white font-black py-4 md:py-5 rounded-xl shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)] transition transform hover:-translate-y-1 relative z-10 flex justify-center items-center gap-2 text-sm md:text-base">
-                <span>📄</span> Ver Espelho da Prova
+                <span>📄</span> Ver Correção Detalhada
             </button>
         </div>
     </div>
@@ -481,23 +510,32 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configurações e Chaves (Nova pasta isolada para IoT)
-        const firebaseConfig = {
-            apiKey: "AIzaSyAAVaCeB" + "IWVN9oYHS3Dbg_eZDw5YA2lb84",
-            authDomain: "avaliacao-logica-46f5e.firebaseapp.com",
-            projectId: "avaliacao-logica-46f5e",
-            storageBucket: "avaliacao-logica-46f5e.firebasestorage.app",
-            messagingSenderId: "864696613529",
-            appId: "1:864696613529:web:031df7f1e9254c40945608"
-        };
-        const appIdStr = 'avaliacao-iot-2serie'; // <-- MUDANÇA AQUI: Nova pasta de banco de dados
+        // Configurações e Chaves (Pasta isolada para IoT)
+        let firebaseConfig;
+        let appIdStr;
+        
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+            appIdStr = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        } else {
+            firebaseConfig = {
+                apiKey: "AIzaSyAAVaCeB" + "IWVN9oYHS3Dbg_eZDw5YA2lb84",
+                authDomain: "avaliacao-logica-46f5e.firebaseapp.com",
+                projectId: "avaliacao-logica-46f5e",
+                storageBucket: "avaliacao-logica-46f5e.firebasestorage.app",
+                messagingSenderId: "864696613529",
+                appId: "1:864696613529:web:031df7f1e9254c40945608"
+            };
+            appIdStr = 'avaliacao-iot-2serie'; // <-- Pasta isolada
+        }
+
         const googleSheetsUrl = "https://script.google.com/macros/s/AKfycbxvL9ZxaRlIDKvRadqkMoY1Yu3w20f5F-llfQQS1aRvrz2SpSmBTdzlrK52jBanUiHM/exec";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Banco de Dados Local
+        // Banco de Dados Local - Intacto
         const bancoDeAlunos = [
             { id: "aluno_01", nome: "ALLETSON P. F. D. S.", senha: "26102009" },
             { id: "aluno_02", nome: "ALLYSTER L. D. S. N.", senha: "04042009" },
@@ -546,7 +584,7 @@
             { id: "q4", tipo: "multipla", correta: "c", pergunta: "Uma startup desenvolveu uma 'Pulseira Inteligente' (Wearable) que monitora o coração de idosos. A pulseira precisa apenas se comunicar com o próprio celular do idoso (que está no bolso da calça dele), gastando o MÍNIMO de bateria possível. Qual a melhor tecnologia de rede para este cenário?", opcoes: ["a) LoRaWAN, porque é focada em alcançar longas distâncias rurais, ideal para o idoso caminhar.", "b) 5G com protocolo HTTP, pois é a tecnologia mais atual e gasta pouca bateria na troca de vídeos.", "c) Bluetooth (BLE), pois é projetado perfeitamente para conexões de curtíssima distância (como bolso e pulso) e tem baixíssimo consumo energético.", "d) Rede Wi-Fi em malha, garantindo que a pulseira se conecte com o roteador da casa o tempo todo.", "e) Conexão Ethernet com cabo embutido na manga da camisa."] },
             { id: "q5", tipo: "multipla", correta: "a", pergunta: "Você programou no Google Teachable Machine: Classe 1 (Copo Verde) e Classe 2 (Copo Vermelho). Você treinou a IA usando 500 fotos de copos de madeira verdes. Durante o teste prático, você mostra uma Garrafa de Plástico Verde, e a IA afirma com 99% de certeza que é um 'Copo Verde'. Por que a IA cometeu esse erro de falso positivo?", opcoes: ["a) Porque a máquina não entende o conceito abstrato de formato de 'copo' vs 'garrafa'; ela apenas reconheceu o padrão matemático de pixels da cor verde que foi predominante na coleta de dados e associou à Classe 1.", "b) Porque a IA do Google possui um banco de dados universal que anula a necessidade de fotos de copos.", "c) Ocorreu um erro no sensor PIR da câmera, que confundiu o calor do plástico com a madeira.", "d) A IA identificou que garrafas e copos são da mesma família de Tupperware através da internet clássica.", "e) A máquina exigiu uma chave MQTT para conseguir processar o plástico."] },
             { id: "q6", tipo: "multipla", correta: "b", pergunta: "Para automatizar as luzes do pátio da escola, o diretor sugeriu fixar um 'Sensor PIR' no muro para detectar quando a luz do Sol se põe. Como um bom técnico de IoT, você recusa a ideia justificando de forma técnica que:", opcoes: ["a) O PIR mede umidade e estragaria com o calor do Sol.", "b) O PIR detecta variação de radiação infravermelha (calor em movimento de corpos vivos/físicos), e não a ausência de fótons de luz do ambiente. O correto seria usar um sensor LDR.", "c) O PIR usa ondas sonoras de morcegos e não consegue escutar o Sol se pondo no horizonte.", "d) A luz do Sol derreteria o protocolo HTTP dentro do microcontrolador.", "e) O PIR só funciona via Bluetooth, que não tem alcance do muro para a sala do diretor."] },
-            { id: "q7", tipo: "multipla", correta: "b", pergunta: "No Microsoft MakeCode (micro:bit), você quer que um LED vermelho acenda para avisar de geada *somente se* a temperatura cair para zero (0) ou ficar negativa (-1, -2). Você montou a lógica: `SE (Temperatura < 0) ENTÃO { Ligar LED }`. Durante uma noite inteira a temperatura ficou exatamente em 0°C, mas o LED NÃO ligou. O que faltou na lógica matemática?", opcoes: ["a) Zero não é considerado um número na linguagem do MakeCode.", "b) O sinal matemático de comparação correto deveria ser 'Menor ou Igual' (<=). Como 0 não é menor que 0, a condição foi ignorada como falsa.", "c) A placa travou porque o frio congela o processamento do bloco SENÃO.", "d) A estrutura condicional estava certa, mas faltou colocar a variável dentro de um laço de repetição (Loop) para esquentar.", "e) O LED exigia uma rede LoRaWAN para receber números negativos."] },
+            { id: "q7", tipo: "multipla", correta: "b", pergunta: "No Microsoft MakeCode (micro:bit), você quer que um LED vermelho acenda para avisar de geada *somente se* a temperatura cair para zero (0) ou ficar negativa (-1, -2). Você montou a lógica: `SE (Temperatura < 0) ENTÃO { Ligar LED }`. Durante uma noite inteira a temperatura ficou exatamente em 0°C, mas o LED NÃO ligou. O que faltou na lógica matemática?", opcoes: ["a) Zero não é considerado um número na linguagem do MakeCode.", "b) O sinal matemático de comparação correto deveria ser 'Menor ou Igual' (<=). Como 0 não é menor que 0, a condição foi ignorada como falsa.", "c) A placa travou porque o frio congela o processamento do bloco SENÃO.", "d) A structure condicional estava certa, mas faltou colocar a variável dentro de um laço de repetição (Loop) para esquentar.", "e) O LED exigia uma rede LoRaWAN para receber números negativos."] },
             { id: "q8", tipo: "multipla", correta: "d", pergunta: "O diretor de um hospital implementou pulseiras IoT que monitoram dados vitais de pacientes 24 horas por dia. O sistema envia a saúde do paciente via protocolo MQTT para uma nuvem aberta, sem senhas, usando a internet da recepção. Qual é o MAIOR desafio fatal gerado por esse cenário de implantação?", opcoes: ["a) O protocolo MQTT consome toda a franquia de dados da internet do hospital em 5 minutos.", "b) A pulseira ficará pesada demais ao processar MQTT localmente.", "c) A bateria acabará rápido pois o MQTT foi feito para gastar o dobro de energia do HTTP.", "d) Uma enorme vulnerabilidade de privacidade e segurança. Hackers podem interceptar facilmente dados médicos sensíveis, invadindo a rede do hospital através das pulseiras desprotegidas.", "e) O hospital ficará muito eficiente, forçando a demissão em massa de médicos."] },
             { id: "q9", tipo: "multipla", correta: "b", pergunta: "Análise de Lógica (Verdadeiro ou Falso):\n\nI. O Sensor Ultrassônico (HC-SR04) é considerado um Atuador (Músculo) no corpo da IoT, pois ele realiza a ação física de emitir ondas sonoras para assustar pequenos animais.\n\nII. A transformação de um 'objeto burro' em 'inteligente' (IoT) exige minimamente a presença de três etapas: Coleta de dados (Dispositivo), Conectividade com a internet e Processamento (Aplicação).\n\nMarque a correta:", opcoes: ["a) A afirmação I é Verdadeira e a II é Falsa.", "b) A afirmação I é Falsa e a II é Verdadeira.", "c) Ambas as afirmações são Verdadeiras.", "d) Ambas as afirmações são Falsas.", "e) O Sensor HC-SR04 só funciona se acompanhado da rede 5G."] },
             { id: "q10", tipo: "multipla", correta: "c", pergunta: "Análise de Lógica de Redes e Sistemas (Verdadeiro ou Falso):\n\nI. A comunicação M2M (Machine to Machine) exige, obrigatoriamente, que um humano aperte um botão no celular para liberar o envio de cada pacote de dados dos sensores.\n\nII. Uma 'Variável' na programação por blocos (MakeCode) atua como uma 'gaveta de memória', cuja utilidade principal é salvar a leitura do ambiente lida pelo sensor para ser usada e comparada posteriormente na lógica SE/SENÃO.\n\nMarque a correta:", opcoes: ["a) A afirmação I é Verdadeira e a II é Falsa.", "b) Ambas as afirmações são Verdadeiras.", "c) A afirmação I é Falsa e a II é Verdadeira.", "d) Ambas as afirmações são Falsas.", "e) A comunicação M2M só funciona via Bluetooth (BLE)."] },
@@ -556,31 +594,7 @@
             { id: "q14", tipo: "discursiva", pergunta: "DESAFIO DE PROJETO: Lógica de Automação Híbrida (Sala Inteligente)", instrucao: "Você foi contratado para criar a lógica de IoT de uma Sala de Aula Inteligente do futuro.\n\nO sistema deve acender as lâmpadas automaticamente APENAS SE duas condições do ambiente forem confirmadas ao mesmo tempo no MakeCode: \nCondição A: A sala estiver escura.\nCondição B: Houver alunos se movimentando na sala.\n\nCom base em tudo o que estudou na 'Anatomia da IoT' e Lógica de Blocos, responda os 3 itens abaixo de forma técnica:\n\n1. Para captar a Condição A e a Condição B do ambiente, cite quais os DOIS sensores de entrada (Input) corretos para o projeto.\n2. Escreva como ficaria a lógica condicional SE/ENTÃO juntando as duas exigências.\n3. Qual componente serve como Atuador de saída (Output) de fato nesse cenário e por que precisamos dele (ao invés de ligar a lâmpada direto na placa)?" }
         ];
 
-        // Referências DOM
-        const ui = {
-            login: document.getElementById('login-screen'),
-            modalProf: document.getElementById('modal-prof-login'),
-            prof: document.getElementById('professor-screen'),
-            review: document.getElementById('review-screen'),
-            start: document.getElementById('start-screen'),
-            warning: document.getElementById('warning-screen'),
-            finish: document.getElementById('finish-screen'),
-            quiz: document.getElementById('quiz-content'),
-            results: document.getElementById('student-results-screen'),
-            confirm: document.getElementById('confirm-submit-modal'),
-            form: document.getElementById('avaliacao-form'),
-            genericModal: document.getElementById('generic-modal'),
-            deleteModal: document.getElementById('delete-exam-modal')
-        };
-
-        // Popular Dropdown
-        bancoDeAlunos.forEach(a => {
-            const opt = document.createElement('option');
-            opt.value = a.id; opt.textContent = a.nome;
-            document.getElementById('aluno-select').appendChild(opt);
-        });
-
-        // Estado
+        // Variáveis Globais e Estado
         let alunoLogado = null;
         let globalStatus = "fechado";
         let ordemQuestoes = [];
@@ -589,22 +603,196 @@
         let clockInterval = null;
         let alunoIdExclusao = null;
         let alunoCorrecaoAtual = null;
+        window.respostaDiscursivaAtual = "";
 
-        // Modal Helper
-        function showModal(title, message, type="info") {
-            const modal = ui.genericModal;
-            document.getElementById('generic-modal-title').textContent = title;
-            document.getElementById('generic-modal-message').textContent = message;
-            
-            const icon = document.getElementById('generic-modal-icon');
-            if(type === "warning") { icon.textContent = "🔒"; icon.className = "text-6xl mb-6 text-red-500 drop-shadow-md"; }
-            else if(type === "info") { icon.textContent = "⌛"; icon.className = "text-6xl mb-6 text-blue-500 drop-shadow-md"; }
-            
-            modal.style.display = 'flex';
+        // ================= FUNÇÕES DE UTILIDADE E SEGURANÇA =================
+
+        // Prevenção de Erros de DOM: Binder seguro de Eventos
+        function safeBind(id, eventType, handler) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener(eventType, handler);
+            } else {
+                console.warn(`[SafeBind] Elemento com ID '${id}' não encontrado para associar o evento '${eventType}'.`);
+            }
         }
 
-        // --- AUTH ---
-        async function doAuth() {
+        // Substituição do Alert Nativo pelo Custom Alert Modal
+        window.mostrarAlerta = (titulo, mensagem, icone = "⚠️") => {
+            const titleEl = document.getElementById('generic-modal-title');
+            const msgEl = document.getElementById('generic-modal-message');
+            const iconEl = document.getElementById('generic-modal-icon');
+            const modalEl = document.getElementById('generic-modal');
+            const btnEl = document.getElementById('btn-generic-modal-ok');
+
+            if (!modalEl || !titleEl || !msgEl || !iconEl || !btnEl) return; // Fallback se falhar DOM
+
+            titleEl.textContent = titulo;
+            msgEl.textContent = mensagem;
+            iconEl.textContent = icone;
+            
+            modalEl.style.display = 'flex';
+
+            // Remove antigos listeners limpando o botão
+            const novoBtn = btnEl.cloneNode(true);
+            btnEl.parentNode.replaceChild(novoBtn, btnEl);
+            novoBtn.addEventListener('click', () => {
+                modalEl.style.display = 'none';
+            });
+        };
+
+        // --- SISTEMA ANTI-COLA (TELA CHEIA E BLUR) ---
+        function applySecurity() {
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            
+            document.addEventListener('keydown', e => {
+                if (e.key === 'F12') { e.preventDefault(); }
+                if ((e.ctrlKey || e.metaKey) && (e.shiftKey) && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); }
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U' || e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 'p' || e.key === 'P')) { e.preventDefault(); }
+            });
+
+            const handleFocusLoss = () => {
+                if (isExamActive) {
+                    const warning = document.getElementById('warning-screen');
+                    const quiz = document.getElementById('quiz-content');
+                    if (warning) warning.style.display = 'flex';
+                    if (quiz) quiz.classList.add('blurred-screen');
+                    try { 
+                        if (document.fullscreenElement) {
+                            const exitPromise = document.exitFullscreen();
+                            if (exitPromise && exitPromise.catch) exitPromise.catch(()=>{});
+                        }
+                    } catch(e){}
+                }
+            };
+
+            window.addEventListener('blur', handleFocusLoss);
+            document.addEventListener('visibilitychange', () => { if (document.hidden) handleFocusLoss(); });
+            document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) handleFocusLoss(); });
+        }
+
+        // ================= IA E GOOGLE GEMINI API =================
+        
+        function getGeminiApiKey() {
+            // Se estiver em ambiente Canvas com a key injetada:
+            if (typeof __app_id !== 'undefined') {
+                return ""; 
+            }
+            // Se for ambiente externo, usa fallback por sessionStorage/prompt:
+            let key = sessionStorage.getItem('gemini_api_key');
+            if (!key) {
+                key = prompt("⚠️ Ambiente local detectado.\nInsira sua chave de API do Google Gemini para realizar as correções com IA:");
+                if (key) sessionStorage.setItem('gemini_api_key', key);
+            }
+            return key || "";
+        }
+
+        window.fetchGeminiWithRetry = async function(promptText, systemInstruction, maxRetries = 5) {
+            let apiKey = getGeminiApiKey();
+            let endpointUrl = "";
+
+            // Verifica se está rodando fora do Canvas (ex: GitHub Pages)
+            if (typeof __app_id === 'undefined') {
+                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+                try {
+                    const listRes = await fetch(listUrl);
+                    if (!listRes.ok) {
+                        if (listRes.status === 400 || listRes.status === 403) sessionStorage.removeItem("gemini_api_key");
+                        throw new Error("Chave de API inválida ou sem permissão de acesso.");
+                    }
+                    const listData = await listRes.json();
+                    
+                    const validModels = listData.models.filter(m => 
+                        m.supportedGenerationMethods && 
+                        m.supportedGenerationMethods.includes("generateContent") &&
+                        m.name.includes("gemini") && !m.name.includes("pro")
+                    );
+
+                    const bestModel = validModels.find(m => m.name.includes("1.5-flash")) || validModels[0];
+                    endpointUrl = `https://generativelanguage.googleapis.com/v1beta/${bestModel.name}:generateContent?key=${apiKey}`;
+                } catch (err) {
+                    console.warn("[IA] Falha na autodescoberta. Usando fallback rígido:", err);
+                    endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                }
+            } else {
+                // Ambiente interno de testes do Canvas
+                endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            }
+            
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                generationConfig: { 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            nota: { type: "NUMBER" },
+                            feedback: { type: "STRING" }
+                        },
+                        required: ["nota", "feedback"]
+                    }
+                }
+            };
+
+            const delays = [4000, 8000, 15000, 30000, 60000];
+
+            for (let i = 0; i <= maxRetries; i++) {
+                try {
+                    const response = await fetch(endpointUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        return JSON.parse(data.candidates[0].content.parts[0].text);
+                    }
+
+                    if (response.status === 429 || response.status === 503) {
+                        if (i === maxRetries) throw new Error("Cota de requisições excedida (Rate Limit) e tentativas esgotadas.");
+                        console.warn(`[IA] Rate limit atingido (${response.status}). Aguardando ${delays[i]/1000}s...`);
+                        
+                        const statusEl = document.getElementById('batch-processing-status');
+                        if (statusEl) statusEl.textContent = `Aguardando liberação de cota do Google (${delays[i]/1000}s)...`;
+                        
+                        await new Promise(r => setTimeout(r, delays[i]));
+                        continue;
+                    }
+
+                    if (response.status === 400 && typeof __app_id === 'undefined') sessionStorage.removeItem("gemini_api_key");
+                    const errText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errText}`);
+                } catch (error) {
+                    if (i === maxRetries) {
+                        throw new Error("Falha ao comunicar com a IA: " + error.message);
+                    }
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+        };
+
+        window.avaliarRespostaComIA = async function(respostaDiscursiva, nomeAluno) {
+            const questaoContexto = bancoDeQuestoes.find(q => q.tipo === "discursiva");
+            
+            const promptText = `
+                ALUNO: ${nomeAluno}
+                PERGUNTA: ${questaoContexto.pergunta}
+                INSTRUÇÕES FORNECIDAS: ${questaoContexto.instrucao}
+                
+                RESPOSTA DO ALUNO A SER AVALIADA:
+                "${respostaDiscursiva}"
+                
+                Avalie a resposta criticamente e atribua uma nota de 0.0 a 3.0. Devolva o resultado EXATAMENTE no formato JSON exigido.
+            `;
+
+            const systemInstruction = `Você é o professor avaliador da turma, falando com o aluno na 1ª pessoa do singular. Aja de forma MUITO LEVE, POSITIVA E EMPÁTICA. NUNCA use palavras duras. SEPARE O TEXTO EM TÓPICOS usando quebras de linha duplas (\n\n). Estruture os tópicos EXATAMENTE assim: 'Rúbrica de Correção:', 'Pontos Fortes:' e 'Oportunidades de Melhoria:'. NÃO USE EMOJIS. Não use frases de suporte de IA. Finalize com incentivo no último parágrafo. A nota máxima é 3.0.`;
+
+            return await window.fetchGeminiWithRetry(promptText, systemInstruction);
+        };
+
+        window.doAuth = async function() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     try {
@@ -619,53 +807,84 @@
                 console.error("Erro Auth:", err);
                 throw err;
             }
-        }
-
-        // --- SISTEMA ANTI-COLA (TELA CHEIA E BLUR) ---
-        function applySecurity() {
-            document.addEventListener('contextmenu', e => e.preventDefault());
-            
-            document.addEventListener('keydown', e => {
-                if (e.key === 'F12') { e.preventDefault(); }
-                if ((e.ctrlKey || e.metaKey) && (e.shiftKey) && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); }
-                if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U' || e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 'p' || e.key === 'P')) { e.preventDefault(); }
-            });
-
-            const handleFocusLoss = () => {
-                if (isExamActive) {
-                    ui.warning.style.display = 'flex';
-                    ui.quiz.classList.add('blurred-screen');
-                    try { 
-                        if (document.fullscreenElement && document.exitFullscreen) {
-                            document.exitFullscreen().catch(()=>{}); 
-                        }
-                    } catch(e){}
-                }
-            };
-
-            window.addEventListener('blur', handleFocusLoss);
-            document.addEventListener('visibilitychange', () => { if (document.hidden) handleFocusLoss(); });
-            document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) handleFocusLoss(); });
-        }
-
-        document.getElementById('btn-retornar').onclick = () => {
-            const el = document.documentElement;
-            const rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-            if(rfs) {
-                rfs.call(el).then(() => {
-                    ui.warning.style.display = 'none';
-                    ui.quiz.classList.remove('blurred-screen');
-                }).catch(() => {
-                    alert("Por favor, permita o modo tela cheia para retornar.");
-                });
-            } else {
-                ui.warning.style.display = 'none';
-                ui.quiz.classList.remove('blurred-screen');
-            }
         };
 
-        // --- LOGIN ALUNO ---
-        document.getElementById('btn-login').onclick = async () => {
+        // ================= INICIALIZAÇÃO DE EVENTOS DOM (SAFE BIND) =================
+
+        window.onload = () => {
+            // Dropdown de alunos
+            const selectAluno = document.getElementById('aluno-select');
+            if(selectAluno) {
+                bancoDeAlunos.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id; opt.textContent = a.nome;
+                    selectAluno.appendChild(opt);
+                });
+            }
+
+            // --- Binds Tela Login Aluno ---
+            safeBind('btn-login', 'click', handleAlunoLogin);
+            
+            // --- Binds Tela Login Prof ---
+            safeBind('btn-login-prof-trigger', 'click', () => {
+                document.getElementById('modal-prof-login').style.display = 'flex';
+                document.getElementById('prof-login-error').classList.add('hidden');
+                document.getElementById('prof-senha-input').value = '';
+            });
+            safeBind('btn-prof-cancel', 'click', () => {
+                document.getElementById('modal-prof-login').style.display = 'none';
+            });
+            safeBind('btn-prof-entrar', 'click', handleProfLogin);
+
+            // --- Binds Dashboard Prof ---
+            safeBind('btn-prof-abrir', 'click', () => mudarStatusGlobal("aberto"));
+            safeBind('btn-prof-fechar', 'click', () => mudarStatusGlobal("fechado"));
+            safeBind('btn-prof-notas', 'click', () => mudarStatusGlobal("notas"));
+            safeBind('btn-prof-resultados', 'click', () => mudarStatusGlobal("resultados"));
+            safeBind('btn-prof-atualizar', 'click', carregarListaExames);
+            safeBind('btn-prof-sair', 'click', () => location.reload());
+            safeBind('btn-prof-lote-ia', 'click', iniciarCorrecaoLote);
+
+            // --- Binds Revisão de Prova (Prof e Aluno) ---
+            safeBind('btn-fechar-review', 'click', () => {
+                document.getElementById('review-screen').style.display = 'none';
+                if(alunoLogado && (globalStatus === 'resultados' || globalStatus === 'notas')) {
+                    document.getElementById('student-results-screen').style.display = 'flex';
+                } else {
+                    document.getElementById('professor-screen').style.display = 'flex';
+                }
+            });
+            safeBind('btn-salvar-correcao', 'click', handleSalvarCorrecaoManual);
+            safeBind('btn-sugerir-ia', 'click', handleSugerirCorrecaoIA);
+
+            // --- Binds Exclusão Modal ---
+            safeBind('btn-cancel-delete', 'click', () => document.getElementById('delete-exam-modal').style.display = 'none');
+            safeBind('btn-confirm-delete', 'click', handleConfirmarExclusao);
+
+            // --- Binds Tela Instruções e Prova ---
+            safeBind('btn-iniciar', 'click', handleIniciarProva);
+            safeBind('btn-prev', 'click', () => navegarSlide(-1));
+            safeBind('btn-next', 'click', () => { navegarSlide(1); salvarProgressoParcial(); });
+            safeBind('btn-finalizar', 'click', () => document.getElementById('confirm-submit-modal').style.display = 'flex');
+            
+            // --- Binds Modal Finalizar ---
+            safeBind('btn-confirm-no', 'click', () => document.getElementById('confirm-submit-modal').style.display = 'none');
+            safeBind('btn-confirm-yes', 'click', handleEntregaDefinitiva);
+
+            // --- Binds Tela Bloqueio ---
+            safeBind('btn-retornar', 'click', handleRetornarAoFoco);
+            
+            // --- Binds Ver Espelho Aluno ---
+            safeBind('btn-ver-prova-corrigida', 'click', () => {
+                document.getElementById('student-results-screen').style.display = 'none';
+                renderizarCorrecao(window.examData, false);
+            });
+        };
+
+
+        // ================= LÓGICAS CORE DO SISTEMA =================
+
+        async function handleAlunoLogin() {
             const idSel = document.getElementById('aluno-select').value;
             const senha = document.getElementById('aluno-senha').value.trim();
             const errEl = document.getElementById('login-error');
@@ -690,59 +909,49 @@
             btn.innerHTML = `<span class="animate-spin text-xl">⏳</span> Autenticando...`;
 
             try {
-                await doAuth();
+                await window.doAuth();
                 const statusRef = doc(db, 'artifacts', appIdStr, 'public', 'data', 'config', 'status');
                 const statusSnap = await getDoc(statusRef);
                 globalStatus = statusSnap.exists() ? statusSnap.data().estado : "fechado";
                 
                 alunoLogado = info;
-                ui.login.style.display = 'none';
+                document.getElementById('login-screen').style.display = 'none';
                 rotearAluno();
             } catch (e) {
-                errEl.textContent = "Falha ao conectar com o servidor."; errContainer.classList.remove('hidden');
+                console.error("Erro Aluno Login:", e);
+                errEl.textContent = "Falha ao conectar: " + e.message; 
+                errContainer.classList.remove('hidden');
                 btn.disabled = false;
                 btn.innerHTML = `<span>ACESSAR PROVA</span><span class="text-xl">➔</span>`;
             }
-        };
+        }
 
-        // --- LOGIN ADMIN ---
-        document.getElementById('btn-login-prof-trigger').onclick = () => {
-            ui.modalProf.style.display = 'flex';
-            document.getElementById('prof-login-error').classList.add('hidden');
-            document.getElementById('prof-senha-input').value = '';
-        };
-        
-        document.getElementById('btn-prof-cancel').onclick = () => ui.modalProf.style.display = 'none';
-        
-        document.getElementById('btn-prof-entrar').onclick = async () => {
+        async function handleProfLogin() {
             const pwd = document.getElementById('prof-senha-input').value;
             const errEl = document.getElementById('prof-login-error');
             
             if (pwd === "R@prova1412!!") {
-                ui.modalProf.style.display = 'none'; 
-                ui.login.style.display = 'none';
+                document.getElementById('modal-prof-login').style.display = 'none'; 
+                document.getElementById('login-screen').style.display = 'none';
                 try {
-                    await doAuth();
+                    await window.doAuth();
                     const statusSnap = await getDoc(doc(db, 'artifacts', appIdStr, 'public', 'data', 'config', 'status'));
                     globalStatus = statusSnap.exists() ? statusSnap.data().estado : "fechado";
                     montarPainelProfessor();
-                } catch(e) { alert("Falha na rede."); location.reload(); }
+                } catch(e) { 
+                    console.error("Erro Prof Login:", e);
+                    window.mostrarAlerta("Erro de Rede", "Falha de conexão: " + e.message, "❌"); 
+                    document.getElementById('login-screen').style.display = 'flex';
+                }
             } else {
                 errEl.classList.remove('hidden');
             }
-        };
+        }
 
-        // --- PAINEL PROFESSOR ---
         function montarPainelProfessor() {
-            ui.prof.style.display = 'flex';
+            document.getElementById('professor-screen').style.display = 'flex';
             atualizarVisorStatusProf();
             carregarListaExames();
-            
-            document.getElementById('btn-prof-abrir').onclick = () => mudarStatusGlobal("aberto");
-            document.getElementById('btn-prof-fechar').onclick = () => mudarStatusGlobal("fechado");
-            document.getElementById('btn-prof-resultados').onclick = () => mudarStatusGlobal("resultados");
-            document.getElementById('btn-prof-atualizar').onclick = carregarListaExames;
-            document.getElementById('btn-prof-sair').onclick = () => location.reload();
         }
 
         async function mudarStatusGlobal(novoStatus) {
@@ -756,9 +965,10 @@
             const indicator = document.getElementById('status-indicator');
             display.textContent = globalStatus.toUpperCase();
             
-            if(globalStatus === 'aberto') { display.className = "text-2xl font-black mt-1 text-green-600"; indicator.className = "w-3 h-3 md:w-4 md:h-4 rounded-full bg-green-500 animate-pulse"; }
-            else if(globalStatus === 'fechado') { display.className = "text-2xl font-black mt-1 text-red-600"; indicator.className = "w-3 h-3 md:w-4 md:h-4 rounded-full bg-red-500"; }
-            else { display.className = "text-2xl font-black mt-1 text-blue-600"; indicator.className = "w-3 h-3 md:w-4 md:h-4 rounded-full bg-blue-500 animate-pulse"; }
+            if(globalStatus === 'aberto') { display.className = "text-xl md:text-2xl font-black mt-1 text-green-600"; indicator.className = "w-3 h-3 md:w-4 md:h-4 rounded-full bg-green-500 animate-pulse"; }
+            else if(globalStatus === 'fechado') { display.className = "text-xl md:text-2xl font-black mt-1 text-red-600"; indicator.className = "w-3 h-3 md:w-4 md:h-4 rounded-full bg-red-500"; }
+            else if(globalStatus === 'notas') { display.className = "text-xl md:text-2xl font-black mt-1 text-yellow-600"; indicator.className = "w-3 h-3 md:w-4 md:h-4 rounded-full bg-yellow-500 animate-pulse"; }
+            else { display.className = "text-xl md:text-2xl font-black mt-1 text-blue-600"; indicator.className = "w-3 h-3 md:w-4 md:h-4 rounded-full bg-blue-500 animate-pulse"; }
         }
 
         async function carregarListaExames() {
@@ -766,81 +976,189 @@
             container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-10 md:py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
                 <span class="text-3xl md:text-4xl mb-2 md:mb-3 animate-spin">⏳</span><p class="text-gray-500 text-sm md:text-base font-bold">Buscando banco de dados...</p></div>`;
             
-            const snap = await getDocs(collection(db, 'artifacts', appIdStr, 'public', 'data', 'exames'));
-            let h = "";
-            let temEntrega = false;
-            snap.forEach(docSnap => {
-                const data = docSnap.data();
-                if(data.finalizado) {
-                    temEntrega = true;
-                    const auto = data.notaAutomatica || 0;
-                    const asc = data.notaAssociacao || 0;
-                    const disc = data.notaDiscursiva || 0;
-                    const total = (auto + asc + disc).toFixed(2).replace('.', ',');
-                    const statusClass = data.notaDiscursiva !== undefined ? "bg-green-100 text-green-800 border-green-200" : "bg-yellow-100 text-yellow-800 border-yellow-200";
-                    const statusTxt = data.notaDiscursiva !== undefined ? "✔ Corrigido" : "⏳ Pendente";
-                    
-                    h += `
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col gap-4 relative overflow-hidden group">
-                            <div class="absolute right-0 top-0 w-2 h-full ${data.notaDiscursiva !== undefined ? 'bg-green-400' : 'bg-yellow-400'}"></div>
-                            <div>
-                                <p class="font-black text-gray-900 text-lg leading-tight mb-1 pr-4">${data.alunoNome}</p>
-                                <span class="text-[10px] uppercase font-black px-2 py-0.5 rounded border ${statusClass}">${statusTxt}</span>
-                            </div>
-                            <div class="flex items-end justify-between mt-auto">
+            try {
+                const snap = await getDocs(collection(db, 'artifacts', appIdStr, 'public', 'data', 'exames'));
+                let h = "";
+                let temEntrega = false;
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if(data.finalizado) {
+                        temEntrega = true;
+                        const auto = data.notaAutomatica || 0;
+                        const asc = data.notaAssociacao || 0;
+                        const disc = data.notaDiscursiva || 0;
+                        const total = (auto + asc + disc).toFixed(2).replace('.', ',');
+                        const isCorrigido = data.notaDiscursiva !== undefined && data.feedbackProfessor && data.feedbackProfessor.trim() !== "";
+                        
+                        const statusClass = isCorrigido ? "bg-green-100 text-green-800 border-green-200" : "bg-yellow-100 text-yellow-800 border-yellow-200";
+                        const statusTxt = isCorrigido ? "✔ Corrigido" : "⏳ Pendente";
+                        
+                        h += `
+                            <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col gap-4 relative overflow-hidden group">
+                                <div class="absolute right-0 top-0 w-2 h-full ${isCorrigido ? 'bg-green-400' : 'bg-yellow-400'}"></div>
                                 <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Nota Total</p>
-                                    <p class="text-2xl font-black text-blue-600">${total} <span class="text-sm text-gray-400 font-medium">/ 14,00</span></p>
+                                    <p class="font-black text-gray-900 text-lg leading-tight mb-1 pr-4">${data.alunoNome}</p>
+                                    <span class="text-[10px] uppercase font-black px-2 py-0.5 rounded border ${statusClass}">${statusTxt}</span>
                                 </div>
-                                <div class="flex gap-2">
-                                    <button onclick="window.abrirCorrecaoAdmin('${data.alunoId}')" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 px-3 py-2 rounded-lg font-bold shadow-sm transition text-sm flex items-center gap-1">
-                                        <span>📝</span> Avaliar
-                                    </button>
-                                    <button onclick="window.abrirExclusaoModal('${data.alunoId}', '${data.alunoNome}')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 px-3 py-2 rounded-lg font-bold shadow-sm transition text-sm" title="Excluir Entrega">
-                                        🗑️
-                                    </button>
+                                <div class="flex items-end justify-between mt-auto">
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Nota Total</p>
+                                        <p class="text-2xl font-black text-blue-600">${total} <span class="text-sm text-gray-400 font-medium">/ 14,00</span></p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="window.abrirCorrecaoAdmin('${data.alunoId}')" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 px-3 py-2 rounded-lg font-bold shadow-sm transition text-sm flex items-center gap-1">
+                                            <span>📝</span> Avaliar
+                                        </button>
+                                        <button onclick="window.abrirExclusaoModal('${data.alunoId}', '${data.alunoNome}')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 px-3 py-2 rounded-lg font-bold shadow-sm transition text-sm" title="Excluir Entrega">
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                }
-            });
-            container.innerHTML = temEntrega ? h : `<div class="col-span-full flex flex-col items-center justify-center py-10 md:py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300"><span class="text-3xl md:text-4xl mb-2 md:mb-3 opacity-50">📂</span><p class="text-gray-400 text-sm md:text-base font-bold">Nenhuma entrega registrada.</p></div>`;
+                        `;
+                    }
+                });
+                container.innerHTML = temEntrega ? h : `<div class="col-span-full flex flex-col items-center justify-center py-10 md:py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300"><span class="text-3xl md:text-4xl mb-2 md:mb-3 opacity-50">📂</span><p class="text-gray-400 text-sm md:text-base font-bold">Nenhuma entrega registrada.</p></div>`;
+            } catch(e) {
+                container.innerHTML = `<p class='text-red-500 text-center font-bold'>Erro ao ler exames: ${e.message}</p>`;
+            }
         }
 
-        // --- EXCLUSÃO MODAL DE PROVA ---
+        // Funções Window (Devido aos onclicks renderizados no HTML dinâmico)
         window.abrirExclusaoModal = (id, nome) => {
             alunoIdExclusao = id;
             document.getElementById('delete-student-name').textContent = nome;
-            ui.deleteModal.style.display = 'flex';
+            document.getElementById('delete-exam-modal').style.display = 'flex';
         };
 
-        document.getElementById('btn-cancel-delete').onclick = () => ui.deleteModal.style.display = 'none';
-        
-        document.getElementById('btn-confirm-delete').onclick = async () => {
+        async function handleConfirmarExclusao() {
             const btn = document.getElementById('btn-confirm-delete');
             btn.innerHTML = `<span class="animate-spin">⏳</span> Excluindo...`; btn.disabled = true;
             try {
                 await deleteDoc(doc(db, 'artifacts', appIdStr, 'public', 'data', 'exames', alunoIdExclusao));
-                ui.deleteModal.style.display = 'none';
+                document.getElementById('delete-exam-modal').style.display = 'none';
                 carregarListaExames();
-            } catch(e) { alert("Erro ao excluir."); }
+                window.mostrarAlerta("Sucesso", "Prova excluída com sucesso. O aluno poderá refazer.", "✅");
+            } catch(e) { window.mostrarAlerta("Erro", "Falha ao excluir exame.", "❌"); }
             btn.innerHTML = "Sim, Excluir"; btn.disabled = false;
-        };
+        }
 
         window.abrirCorrecaoAdmin = async (id) => {
             alunoCorrecaoAtual = id;
-            const snap = await getDoc(doc(db, 'artifacts', appIdStr, 'public', 'data', 'exames', id));
-            if(snap.exists()) {
-                ui.prof.style.display = 'none';
-                renderizarCorrecao(snap.data(), true);
+            try {
+                const snap = await getDoc(doc(db, 'artifacts', appIdStr, 'public', 'data', 'exames', id));
+                if(snap.exists()) {
+                    document.getElementById('professor-screen').style.display = 'none';
+                    renderizarCorrecao(snap.data(), true);
+                }
+            } catch(e) {
+                window.mostrarAlerta("Erro", "Não foi possível carregar a prova deste aluno.", "❌");
             }
         };
 
-        // --- SISTEMA DE CORREÇÃO (PROFESSOR & BOLETIM) ---
+        // --- LÓGICA DE CORREÇÃO LOTE (IA) ---
+        async function iniciarCorrecaoLote() {
+            let apenasPendentes = confirm("MODO IA 🤖\n\nDeseja corrigir APENAS as provas pendentes (sem nota ou feedback)?\n\nClique OK para Pendentes, ou Cancelar para outras opções.");
+            let sobrescrever = false;
+            
+            if (!apenasPendentes) {
+                sobrescrever = confirm("ATENÇÃO ⚠️\n\nVocê escolheu NÃO focar apenas nos pendentes. Deseja reavaliar TODAS AS PROVAS e sobrescrever as notas antigas?\n\nClique OK se tiver certeza absoluta.");
+                if (!sobrescrever) return;
+            }
+
+            const modal = document.getElementById('batch-processing-modal');
+            const title = document.getElementById('batch-processing-title');
+            const status = document.getElementById('batch-processing-status');
+            const bar = document.getElementById('batch-progress-bar');
+            
+            modal.style.display = 'flex';
+            title.textContent = "Buscando provas...";
+            status.textContent = "Preparando a Inteligência Artificial...";
+            bar.style.width = `5%`;
+
+            try {
+                const examesSnap = await getDocs(collection(db, 'artifacts', appIdStr, 'public', 'data', 'exames'));
+                let provasParaCorrigir = [];
+                
+                examesSnap.forEach(documento => {
+                    const d = documento.data();
+                    if (d.finalizado) {
+                        const isPendente = d.notaDiscursiva === undefined || !d.feedbackProfessor || d.feedbackProfessor.trim() === "";
+                        if (apenasPendentes && isPendente) {
+                            provasParaCorrigir.push(d);
+                        } else if (sobrescrever) {
+                            provasParaCorrigir.push(d);
+                        }
+                    }
+                });
+
+                if (provasParaCorrigir.length === 0) {
+                    modal.style.display = 'none';
+                    window.mostrarAlerta("Aviso", "Nenhuma prova se enquadra no critério escolhido para correção.", "ℹ️");
+                    return;
+                }
+
+                let cotaEsgotada = false;
+
+                for (let i = 0; i < provasParaCorrigir.length; i++) {
+                    if (i > 0) {
+                        // Pausa de 7 segundos garantida entre cada prova. (60 seg / 7 = 8.5 requisições por minuto)
+                        // Isso garante que nunca passaremos das 15 RPM gratuitas.
+                        for (let seg = 7; seg > 0; seg--) {
+                            status.textContent = `Intervalo de segurança anti-bloqueio (${seg}s)...`;
+                            await new Promise(r => setTimeout(r, 1000));
+                        }
+                    }
+
+                    const prova = provasParaCorrigir[i];
+                    title.textContent = `Analisando: ${prova.alunoNome}`;
+                    status.textContent = `Avaliando ${i + 1} de ${provasParaCorrigir.length}...`;
+                    bar.style.width = `${((i + 1) / provasParaCorrigir.length) * 100}%`;
+
+                    const respDiscursiva = prova.respostas['q14'] || "";
+                    
+                    try {
+                        let resultadoIA;
+                        if (respDiscursiva.trim().length < 5) {
+                            resultadoIA = { nota: 0, feedback: "A resposta fornecida está em branco ou é curta demais para ser avaliada. Recomendo sempre tentar estruturar uma linha de raciocínio, mesmo que incompleta." };
+                        } else {
+                            resultadoIA = await window.avaliarRespostaComIA(respDiscursiva, prova.alunoNome);
+                        }
+
+                        await updateDoc(doc(db, 'artifacts', appIdStr, 'public', 'data', 'exames', prova.alunoId), {
+                            notaDiscursiva: parseFloat(resultadoIA.nota) || 0,
+                            feedbackProfessor: resultadoIA.feedback || "Avaliação IA concluída."
+                        });
+                    } catch (err) {
+                        console.error(`Falha IA na prova de ${prova.alunoNome}:`, err);
+                        if (err.message.includes("Rate Limit") || err.message.includes("Cota")) {
+                            cotaEsgotada = true;
+                            break; // Interrompe o loop de forma segura
+                        }
+                    }
+                }
+
+                modal.style.display = 'none';
+                if (cotaEsgotada) {
+                    window.mostrarAlerta("Cota de IA Esgotada", "Você atingiu o limite de correções por minuto/dia do nível gratuito do Google. As provas avaliadas até agora foram salvas. Aguarde alguns minutos (ou até amanhã, se for limite diário) e tente novamente para as restantes.", "🛑");
+                } else {
+                    window.mostrarAlerta("Sucesso Extraordinário!", "A Correção em Lote com IA foi finalizada. Analise os resultados no dashboard.", "✨");
+                }
+                carregarListaExames();
+            } catch (error) {
+                modal.style.display = 'none';
+                window.mostrarAlerta("Erro Crítico", "Ocorreu um erro no processamento: " + error.message, "❌");
+            }
+        }
+
+
+        // --- SISTEMA DE CORREÇÃO E VISUALIZAÇÃO DE ESPELHO ---
         function renderizarCorrecao(data, isTeacherMode) {
-            ui.review.style.display = 'flex';
+            document.getElementById('review-screen').style.display = 'flex';
             document.getElementById('review-nome-aluno').textContent = data.alunoNome;
+            
+            // Variável global para armazenar a resposta discursiva para o botão IA manual
+            window.respostaDiscursivaAtual = data.respostas['q14'] || "";
             
             const updateTotalUI = () => {
                 const m = parseFloat(document.getElementById('input-nota-disc')?.value) || 0;
@@ -923,22 +1241,28 @@
                 iptNota.value = data.notaDiscursiva !== undefined ? data.notaDiscursiva : "";
                 document.getElementById('input-feedback-prof').value = data.feedbackProfessor || "";
                 
+                iptNota.removeEventListener('input', updateTotalUI); // Evita duplicados
                 iptNota.addEventListener('input', updateTotalUI);
                 updateTotalUI();
             } else {
                 document.getElementById('area-correcao-prof').classList.add('hidden');
                 document.getElementById('area-feedback-aluno').classList.remove('hidden');
                 document.getElementById('view-nota-disc').textContent = data.notaDiscursiva !== undefined ? parseFloat(data.notaDiscursiva).toFixed(2).replace('.', ',') : "0,00";
-                document.getElementById('view-feedback-texto').textContent = data.feedbackProfessor || "A nota foi processada pelo sistema sem anotações extras do professor.";
+                
+                // Respeitar quebras de linha com o pre-wrap e aplicar o texto
+                const fbkBox = document.getElementById('view-feedback-texto');
+                fbkBox.textContent = data.feedbackProfessor || "A nota foi processada pelo sistema sem anotações adicionais do professor.";
+                fbkBox.className = "text-sm md:text-base font-medium text-gray-800 leading-relaxed whitespace-pre-wrap"; // Adicionado whitespace-pre-wrap para formatar bem o texto gerado por IA.
+
                 document.getElementById('review-nota-total').textContent = ((data.notaAutomatica||0) + (data.notaAssociacao||0) + parseFloat(data.notaDiscursiva||0)).toFixed(2).replace('.', ',');
             }
         }
 
-        document.getElementById('btn-salvar-correcao').onclick = async () => {
+        async function handleSalvarCorrecaoManual() {
             const nota = parseFloat(document.getElementById('input-nota-disc').value);
             const feedback = document.getElementById('input-feedback-prof').value;
             
-            if(isNaN(nota) || nota < 0 || nota > 3) return alert("A nota atribuída deve estar entre 0.0 e 3.0.");
+            if(isNaN(nota) || nota < 0 || nota > 3) return window.mostrarAlerta("Valor Inválido", "A nota atribuída deve estar entre 0.0 e 3.0.", "⚠️");
             
             const btn = document.getElementById('btn-salvar-correcao');
             btn.innerHTML = `<span class="animate-spin text-xl">⏳</span> SALVANDO...`; 
@@ -949,50 +1273,82 @@
                     notaDiscursiva: nota,
                     feedbackProfessor: feedback
                 });
-                ui.review.style.display = 'none';
-                ui.prof.style.display = 'flex';
+                document.getElementById('review-screen').style.display = 'none';
+                document.getElementById('professor-screen').style.display = 'flex';
                 carregarListaExames();
             } catch(e) {
-                alert("Erro ao salvar no banco de dados.");
+                window.mostrarAlerta("Erro", "Erro ao salvar no banco de dados.", "❌");
             } finally {
                 btn.innerHTML = `<span>💾</span> Salvar Nota e Atualizar`; btn.disabled = false;
             }
-        };
+        }
 
-        document.getElementById('btn-fechar-review').onclick = () => {
-            ui.review.style.display = 'none';
-            if(alunoLogado && globalStatus === 'resultados') ui.results.style.display = 'flex';
-            else ui.prof.style.display = 'flex';
-        };
+        async function handleSugerirCorrecaoIA() {
+            const btn = document.getElementById('btn-sugerir-ia');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin text-xl">⏳</span> IA Analisando...`;
+            btn.disabled = true;
+
+            try {
+                const resp = window.respostaDiscursivaAtual || "";
+                if(resp.trim().length < 5) throw new Error("A resposta do aluno está muito curta ou em branco para ser avaliada pela IA.");
+
+                const nomeAluno = document.getElementById('review-nome-aluno').textContent;
+                
+                const resultadoIA = await window.avaliarRespostaComIA(resp, nomeAluno);
+                
+                const iptNota = document.getElementById('input-nota-disc');
+                iptNota.value = resultadoIA.nota;
+                document.getElementById('input-feedback-prof').value = resultadoIA.feedback;
+                
+                iptNota.dispatchEvent(new Event('input')); // Força a nota total no topo a atualizar
+                window.mostrarAlerta("Análise Concluída", "Sugestão da IA carregada com sucesso. Revise e edite conforme necessário antes de salvar.", "✨");
+            } catch(e) {
+                window.mostrarAlerta("Erro IA", e.message, "❌");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
 
         // --- FLUXO ALUNO ---
         async function rotearAluno() {
             const snap = await getDoc(doc(db, 'artifacts', appIdStr, 'public', 'data', 'exames', alunoLogado.id));
             const data = snap.exists() ? snap.data() : null;
 
-            // AVISOS INTELIGENTES
+            // AVISOS INTELIGENTES E TRATAMENTO DE STATUS
             if (globalStatus === "fechado") { 
-                showModal("Acesso Bloqueado", "A avaliação de IoT ainda não está disponível no sistema. Aguarde o professor abrir a sala.", "warning");
+                window.mostrarAlerta("Acesso Bloqueado", "A avaliação de IoT não está disponível. Aguarde o professor liberar a sala.", "🔒");
+                document.getElementById('login-screen').style.display = 'flex';
                 return; 
             }
 
-            if (globalStatus === "resultados") { 
+            if (globalStatus === "notas" || globalStatus === "resultados") { 
                 if(data && data.finalizado) {
                     window.examData = data;
-                    mostrarBoletim(data); 
+                    mostrarBoletim(data);
+                    
+                    // Lógica de Visibilidade: Notas x Gabarito
+                    if (globalStatus === "notas") {
+                        document.getElementById('btn-ver-prova-corrigida').style.display = 'none';
+                    } else {
+                        document.getElementById('btn-ver-prova-corrigida').style.display = 'flex';
+                    }
                     return; 
                 } else {
-                    showModal("Sem Registro", "Você não finalizou ou não enviou esta avaliação para correção.", "warning");
+                    window.mostrarAlerta("Sem Registro", "Você não finalizou ou não enviou esta avaliação no sistema.", "⚠️");
+                    document.getElementById('login-screen').style.display = 'flex';
                     return;
                 }
             }
             
             if (data && data.finalizado) { 
-                showModal("Prova Concluída", "Sua avaliação já foi entregue com sucesso e está trancada no sistema. Aguarde o professor liberar a correção e o boletim para toda a turma.", "info");
+                window.mostrarAlerta("Prova Concluída", "Sua avaliação já foi entregue com sucesso e está trancada no sistema. Aguarde a correção ser liberada.", "✅");
+                document.getElementById('login-screen').style.display = 'flex';
                 return; 
             }
 
-            // Saudação
+            // Saudação Dinâmica
             const pNome = alunoLogado.nome.split(" ")[0];
             const meninos = ["ALLETSON", "ALLYSTER", "AQUILA", "BRYAN", "DAVI", "DELAIAS", "GIOVANNI", "GUILHERME", "HEDER", "HEITOR", "HENRY", "HIURY", "HYURI", "ITALO", "LEANDRO", "LYNCON", "RAFAEL", "RYAN", "WESLEY", "LUCAS"];
             document.getElementById('welcome-title').textContent = meninos.includes(pNome) ? `Bem-vindo, ${pNome}!` : `Bem-vinda, ${pNome}!`;
@@ -1013,7 +1369,7 @@
             }
             
             desenharSlides(data?.respostas || {});
-            ui.start.style.display = 'flex';
+            document.getElementById('start-screen').style.display = 'flex';
         }
 
         function desenharSlides(respostasSalvas) {
@@ -1076,9 +1432,21 @@
             document.getElementById('container-questoes').innerHTML = html;
             atualizarNavegacaoUI();
             
-            ui.form.addEventListener('change', () => {
+            document.getElementById('avaliacao-form').addEventListener('change', () => {
                 document.getElementById('save-status').classList.remove('opacity-100');
             });
+        }
+
+        function navegarSlide(direcao) {
+            const curr = document.getElementById(`slide-${slideAtualIndex}`);
+            if (curr) { curr.classList.remove('slide-fade'); curr.classList.add('hidden'); }
+            
+            slideAtualIndex += direcao; 
+            
+            const nextSlide = document.getElementById(`slide-${slideAtualIndex}`);
+            if (nextSlide) { nextSlide.classList.remove('hidden'); void nextSlide.offsetWidth; nextSlide.classList.add('slide-fade'); }
+            
+            atualizarNavegacaoUI();
         }
 
         function atualizarNavegacaoUI() {
@@ -1096,53 +1464,44 @@
             document.getElementById('current-q-num').textContent = slideAtualIndex+1;
         }
 
-        document.getElementById('btn-prev').onclick = () => { 
-            const curr = document.getElementById(`slide-${slideAtualIndex}`);
-            if (curr) { curr.classList.remove('slide-fade'); curr.classList.add('hidden'); }
-            
-            slideAtualIndex--; 
-            
-            const prev = document.getElementById(`slide-${slideAtualIndex}`);
-            if (prev) { prev.classList.remove('hidden'); void prev.offsetWidth; prev.classList.add('slide-fade'); }
-            
-            atualizarNavegacaoUI(); 
-        };
-
-        document.getElementById('btn-next').onclick = () => { 
-            const curr = document.getElementById(`slide-${slideAtualIndex}`);
-            if (curr) { curr.classList.remove('slide-fade'); curr.classList.add('hidden'); }
-            
-            slideAtualIndex++; 
-            
-            const next = document.getElementById(`slide-${slideAtualIndex}`);
-            if (next) { next.classList.remove('hidden'); void next.offsetWidth; next.classList.add('slide-fade'); }
-            
-            atualizarNavegacaoUI(); 
-            salvarProgressoParcial(); 
-        };
-
         const updateClock = () => {
             const clock = document.getElementById('clock-display');
             if(clock) clock.textContent = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
         };
 
-        document.getElementById('btn-iniciar').onclick = () => {
+        function handleIniciarProva() {
             const el = document.documentElement;
             const rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
             if(rfs) rfs.call(el).catch(()=>{});
             
-            ui.start.style.display = 'none'; 
-            ui.quiz.classList.remove('hidden'); 
+            document.getElementById('start-screen').style.display = 'none'; 
+            document.getElementById('quiz-content').classList.remove('hidden'); 
             isExamActive = true;
             applySecurity(); 
             
             updateClock();
             clockInterval = setInterval(updateClock, 1000);
-        };
+        }
+
+        function handleRetornarAoFoco() {
+            const el = document.documentElement;
+            const rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+            if(rfs) {
+                rfs.call(el).then(() => {
+                    document.getElementById('warning-screen').style.display = 'none';
+                    document.getElementById('quiz-content').classList.remove('blurred-screen');
+                }).catch(() => {
+                    window.mostrarAlerta("Aviso", "Por favor, permita o modo tela cheia no seu navegador para retornar.", "⚠️");
+                });
+            } else {
+                document.getElementById('warning-screen').style.display = 'none';
+                document.getElementById('quiz-content').classList.remove('blurred-screen');
+            }
+        }
 
         async function salvarProgressoParcial() {
             if(!alunoLogado) return;
-            const fd = new FormData(ui.form);
+            const fd = new FormData(document.getElementById('avaliacao-form'));
             const res = Object.fromEntries(fd.entries());
             try {
                 await setDoc(doc(db, 'artifacts', appIdStr, 'public', 'data', 'exames', alunoLogado.id), { respostas: res }, {merge:true});
@@ -1151,18 +1510,15 @@
         }
 
         // --- FINALIZAÇÃO (PROMISE RACE & SHEETS) ---
-        document.getElementById('btn-finalizar').onclick = () => ui.confirm.style.display = 'flex';
-        document.getElementById('btn-confirm-no').onclick = () => ui.confirm.style.display = 'none';
-
-        document.getElementById('btn-confirm-yes').onclick = async () => {
+        async function handleEntregaDefinitiva() {
             const btnYes = document.getElementById('btn-confirm-yes');
             const spinner = document.getElementById('spinner-yes');
             btnYes.disabled = true; spinner.classList.remove('hidden'); btnYes.classList.add('opacity-80');
             
-            isExamActive = false; // Desativa blur
+            isExamActive = false; // Desativa blur e travas
             clearInterval(clockInterval);
             
-            const fd = new FormData(ui.form);
+            const fd = new FormData(document.getElementById('avaliacao-form'));
             let nMultipla = 0; 
             bancoDeQuestoes.filter(q=>q.tipo==='multipla').forEach(q=>{ if(fd.get(q.id)===q.correta) nMultipla += 0.75; });
             
@@ -1217,29 +1573,25 @@
             // Push invisível p/ Planilha Google
             fetch(googleSheetsUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payloadPlanilha) }).catch(()=>{});
             
-            ui.confirm.style.display = 'none';
-            ui.quiz.classList.add('hidden'); 
-            ui.finish.style.display = 'flex';
+            document.getElementById('confirm-submit-modal').style.display = 'none';
+            document.getElementById('quiz-content').classList.add('hidden'); 
+            document.getElementById('finish-screen').style.display = 'flex';
             
             try { 
-                if (document.fullscreenElement && document.exitFullscreen) {
-                    document.exitFullscreen().catch(()=>{}); 
+                if (document.fullscreenElement) {
+                    const exitPromise = document.exitFullscreen();
+                    if (exitPromise && exitPromise.catch) exitPromise.catch(()=>{});
                 } 
             } catch(e){}
-        };
+        }
 
         function mostrarBoletim(data) {
-            ui.results.style.display = 'flex';
+            document.getElementById('student-results-screen').style.display = 'flex';
             document.getElementById('res-aluno-nome').textContent = alunoLogado.nome;
             
             const notaFinal = ((data.notaAutomatica || 0) + (data.notaAssociacao || 0) + parseFloat(data.notaDiscursiva || 0)).toFixed(2).replace('.', ',');
             document.getElementById('res-nota-total').textContent = notaFinal;
         }
-
-        document.getElementById('btn-ver-prova-corrigida').onclick = () => {
-            ui.results.style.display = 'none';
-            renderizarCorrecao(window.examData, false);
-        };
 
     </script>
 </body>
